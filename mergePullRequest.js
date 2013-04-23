@@ -1,10 +1,10 @@
-var Q = require('Q'), rest = require('restler'), _ = require('lodash');
+var Q = require('Q'), rest = require('restler');
 var config = require('./configuration.js').config;
 
 var branchName = process.argv[2];  //THE BRANCH NAME MUST BE INCLUDED AS AN ARGUMENT
 
 return Q.fcall(function () {
-	console.log("Retrieving Commits");
+	console.log("Retrieving Pull Requests");
 
 	var defer = Q.defer();
 	rest.get('https://api.github.com/repos/' + config.owner + '/' + config.repoName + '/pulls', 
@@ -24,7 +24,8 @@ return Q.fcall(function () {
 
 	rest.get(pull.url, { headers: config.theHeaders })
 		.on('success', function (data){
-			var request = { mergeable: data.mergeable, pull.url }
+			console.log('Retrieved detailed pull request');
+			var request = { mergeable: data.mergeable, url: pull.url }
 			defer.resolve(request);
 		})
 		.on('fail', function (error){
@@ -34,15 +35,15 @@ return Q.fcall(function () {
 	return defer.promise;
 }).then( function (request){
 	if (request.mergeable) {
-		rest.post(request.url, { 
+		rest.put(request.url + "/merge" , { 
 				headers: config.theHeaders, 
-				data: { 'commit_message': 'Automatically Merged' }
+				data: JSON.stringify({ 'commit_message': 'Automatically Merged' })
 			}).on('success', function (data) {
 				console.log("Branch name: '" + branchName + "' merged." );
-			}).on('fail', function (error){
-				throw "Unable to merge branch: '" + branchName + "' due to error: " + error.message;
+			}).on('fail', function (error){				
+				console.log("Unable to merge branch: '" + branchName + "' due to error: " + error.message);
 			});
 	} else {
-		throw "!!! Branch '" + branchName + "' is not mergeable !!!";
+		console.log("!!! Branch '" + branchName + "' is not mergeable !!!");
 	}
-})
+});
