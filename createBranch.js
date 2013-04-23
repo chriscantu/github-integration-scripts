@@ -18,10 +18,7 @@ return Q.fcall(function () {
 		});
 	return defer.promise;
 
-}).then( function(commits) {
-	console.log("Creating New Branch: " + branchName);
-	
-	var defer = Q.defer();
+}).then( function (commits) {
 	var lastCommit = commits[0];
 	var ref = "refs/heads/" + branchName;
     var data = JSON.stringify({ref: ref, sha: lastCommit.sha });
@@ -30,12 +27,8 @@ return Q.fcall(function () {
     	headers: config.theHeaders, 
     	data: data
     }).on('success', function (data){
-    	defer.resolve(data);
-    }).on('fail', function (error){
-    	defer.resolve(error);
+    	console.log("Branch '" + branchName + "' Created");
+    }).on('fail', function (error){	
+    	console.log("Error creating branch");
     });
-
-    return defer.promise;
-}).then( function(){
-	console.log("Branch '" + branchName + "' Created");
 });
