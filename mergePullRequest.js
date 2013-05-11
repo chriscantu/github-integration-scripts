@@ -1,4 +1,4 @@
-var Q = require('Q'), rest = require('restler');
+var Q = require('Q'), rest = require('restler'), _ = require('lodash');
 var config = require('./configuration.js').config;
 
 var branchName = process.argv[2];  //THE BRANCH NAME MUST BE INCLUDED AS AN ARGUMENT
@@ -13,12 +13,14 @@ return Q.fcall(function () {
 		.on('fail', function(error) { defer.reject(error) });
 
 	return defer.promise;
-}).then( function (pulls){	
-	for(var i = 0; i <= pulls.length; i++){
-		if ( pulls[i].head.ref == branchName ) {
-			return pulls[i];
-		}
-	}
+}).then( function (pulls){
+	var pull = _.find(pulls, function(pull){
+		return pull.head.ref == branchName;
+	});
+
+	if( !pull ) { throw "Unable to find a pull-request for the branch: " + branchName }
+
+	return pull;
 }).then( function (pull) {
 	var defer = Q.defer();
 
@@ -40,10 +42,10 @@ return Q.fcall(function () {
 				data: JSON.stringify({ 'commit_message': 'Automatically Merged' })
 			}).on('success', function (data) {
 				console.log("Branch name: '" + branchName + "' merged." );
-			}).on('fail', function (error){				
-				console.log("Unable to merge branch: '" + branchName + "' due to error: " + error.message);
+			}).on('fail', function (error){
+				throw "Unable to merge branch: '" + branchName + "' due to error: " + error.message
 			});
 	} else {
-		console.log("!!! Branch '" + branchName + "' is not mergeable !!!");
+		throw "!!! Branch '" + branchName + "' is not mergeable !!!"
 	}
 });
