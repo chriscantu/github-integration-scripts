@@ -12,10 +12,11 @@
 
 ## createTag.js
 * Will create a tag of the latest commit in master
-* Tag name will be the date ( for now )
+* Tag name will be the date if not specified
 
 ### How to use:
-`node createTag.js` 
+<<<<<<< HEAD
+`node createTag.js (optional_tag_name)`
 
 ## mergePullRequest.js
 * Will merge a pull request based off a branch name
